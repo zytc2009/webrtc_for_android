@@ -101,7 +101,7 @@ public class SignalingClient {
                 callback.onSelfJoined(roomId, socketId);//针对的是非房间创建者
             });
             socket.on("log", args -> {
-                Log.e("#####", "log call " + Arrays.toString(args));
+                Log.e("log", "log call " + Arrays.toString(args));
             });
             socket.on("ready", args -> {
                 Log.e("#####[ready]", "###############");
@@ -113,13 +113,14 @@ public class SignalingClient {
                 callback.onPeerLeave(roomId, socketId);
             });
             socket.on("message", args -> {
-                Log.e("#####", "message:" + Arrays.toString(args));
+                Log.v("#####", "message args:" + Arrays.toString(args));
                 Object arg = args[0];
+                Log.e("#####", "message:" + arg);
                 if (arg instanceof String) {
                 } else if (arg instanceof JSONObject) {
                     JSONObject data = (JSONObject) arg;
                     String type = data.optString("type");
-                    if ("".equals(type)) {
+                    if ("offer".equals(type)) {
                         callback.onOfferReceived(data);
                     } else if ("answer".equals(type)) {
                         callback.onAnswerReceived(data);

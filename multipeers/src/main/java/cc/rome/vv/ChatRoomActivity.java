@@ -169,28 +169,8 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
         });
 
 
-        DataChannel.Init init = new DataChannel.Init();
-
-        DataChannel channel = peerConnection.createDataChannel("textchat", init);
-        channel.registerObserver(new DataChannel.Observer() {
-            @Override
-            public void onBufferedAmountChange(long l) {
-
-            }
-
-            @Override
-            public void onStateChange() {
-
-            }
-
-            @Override
-            public void onMessage(DataChannel.Buffer buffer) {
-                Log.w("#####", "[onMessage]DataChannel,buffer =" + buffer.data);
-            }
-        });
-
         peerConnectionMap.put(socketId, peerConnection);
-        channelHashMap.put(socketId, channel);
+//        channelHashMap.put(socketId, channel);
 
         return peerConnection;
     }
@@ -216,6 +196,28 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
         Log.d("#########", "[onPeerJoined],有新加入者，socketId=" + socketId);
         PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
 
+        DataChannel.Init init = new DataChannel.Init();
+
+        Log.d("#########", "[DataChannel] onPeerJoined() socketId =" + socketId);
+        dataChannel = peerConnection.createDataChannel("textchat", init);
+        dataChannel.registerObserver(new DataChannel.Observer() {
+            @Override
+            public void onBufferedAmountChange(long l) {
+
+            }
+
+            @Override
+            public void onStateChange() {
+
+            }
+
+            @Override
+            public void onMessage(DataChannel.Buffer buffer) {
+                Log.w("#####", "[onMessage]DataChannel,buffer =" + buffer.data);
+            }
+        });
+        channelHashMap.put(socketId, dataChannel);
+
         peerConnection.createOffer(new SdpAdapter("createOfferSdp:" + socketId) {
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
@@ -229,12 +231,36 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
 
     @Override
     public void onOfferReceived(JSONObject data) {
-        Log.d("#########", "[onOfferReceived]");
+        Log.d("#########", "[onOfferReceived] data=" + data);
         runOnUiThread(() -> {
             final String socketId = data.optString("from");
             PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
+
+            DataChannel.Init init = new DataChannel.Init();
+
+            Log.d("#########", "[DataChannel] onOfferReceived() socketId =" + socketId);
+            dataChannel = peerConnection.createDataChannel("textchat", init);
+            dataChannel.registerObserver(new DataChannel.Observer() {
+                @Override
+                public void onBufferedAmountChange(long l) {
+
+                }
+
+                @Override
+                public void onStateChange() {
+
+                }
+
+                @Override
+                public void onMessage(DataChannel.Buffer buffer) {
+                    Log.w("#####", "[onMessage]DataChannel,buffer =" + buffer.data);
+                }
+            });
+            channelHashMap.put(socketId, dataChannel);
+
             peerConnection.setRemoteDescription(new SdpAdapter("setRemoteSdp:" + socketId),
                     new SessionDescription(SessionDescription.Type.OFFER, data.optString("sdp")));
+
             peerConnection.createAnswer(new SdpAdapter("localAnswerSdp") {
                 @Override
                 public void onCreateSuccess(SessionDescription sdp) {
