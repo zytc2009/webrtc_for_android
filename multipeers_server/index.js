@@ -13,7 +13,7 @@ var options = {
 var fileServer = new (nodeStatic.Server)();
 var app = https.createServer(options, function (req, res) {
     fileServer.serve(req, res);
-}).listen(8888);
+}).listen(3000);
 
 var io = socketIO.listen(app);
 io.sockets.on('connection', function (socket) {
@@ -38,21 +38,21 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('create or join', function (room) {
-        log('Received request to create or join room ' + room);
+        console.log('Received request to create or join room ' + room);
 
         var clientsInRoom = io.sockets.adapter.rooms[room];
         var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-        log('Room ' + room + ' now has ' + numClients + ' client(s)');
+        console.log('Room ' + room + ' now has ' + numClients + ' client(s)');
 
         if (numClients === 0) {
             //第一个进入房间者，一般是房间的创建者，加入房间时房间里面没有人
             socket.join(room);//调用join加入房间
-            log('Client ID ' + socket.id + ' created room ' + room);
+            console.log('Client ID ' + socket.id + ' created room ' + room);
             socket.emit('created', room, socket.id);//告诉客户端，房间被创建了，客户端对应的socket.on("created")args -> {}会收到消息
 
         } else {
             //从第二个加入这开始，走这个分支
-            log('Client ID ' + socket.id + ' joined room ' + room);
+            console.log('Client ID ' + socket.id + ' joined room ' + room);
             io.sockets.in(room).emit('join', room, socket.id);//in()方法用于在指定的房间中，通过join事件将新加入者的socket.id发送给其他人
             socket.join(room);
             socket.emit('joined', room, socket.id);//发送joined事件给socket.id指定的客户端，
@@ -64,7 +64,7 @@ io.sockets.on('connection', function (socket) {
         var ifaces = os.networkInterfaces();
         for (var dev in ifaces) {
             ifaces[dev].forEach(function (details) {
-                if (details.family === 'IPv4' && details.address !== '192.168.101.5') {
+                if (details.family === 'IPv4' && details.address !== '192.168.200.83') {
                     socket.emit('ipaddr', details.address);
                 }
             });

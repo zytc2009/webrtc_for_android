@@ -73,7 +73,10 @@ public class SignalingClient {
             socket = IO.socket(CommonConfig.HTTPS_SERVER);
             socket.connect();
 
+            //创建房间
             socket.emit("create or join", room);
+
+            //事件处理
             socket.on("created", args -> {
                 String roomId = String.valueOf(args[0]);
                 String socketId = String.valueOf(args[1]);
@@ -116,7 +119,7 @@ public class SignalingClient {
                 } else if (arg instanceof JSONObject) {
                     JSONObject data = (JSONObject) arg;
                     String type = data.optString("type");
-                    if ("offer".equals(type)) {
+                    if ("".equals(type)) {
                         callback.onOfferReceived(data);
                     } else if ("answer".equals(type)) {
                         callback.onAnswerReceived(data);
@@ -133,6 +136,16 @@ public class SignalingClient {
             e.printStackTrace();
         }
     }
+
+
+    /**
+     *
+     * @param message
+     */
+    public void sendMessage(String message){
+        socket.emit("message", room, message);
+    }
+
 
     public void leave(String roomId) {
         socket.emit("bye", roomId);
