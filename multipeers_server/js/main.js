@@ -149,6 +149,26 @@ function createPeerConnection() {
     pc = new RTCPeerConnection(null);
     pc.onicecandidate = handleIceCandidate;
     pc.onaddstream = handleRemoteStreamAdded;
+    pc.pc.ondatachannel=function(e)
+       {
+           console.log("传输通道打开",arguments);
+           channel =e.channel;
+           channel.onopen = function()
+           {
+               tip("等待接收消息");
+               console.log("接收通道打开",arguments);
+           };
+           channel.onclose = function()
+           {
+               tip("断开消息通道");
+               console.log("接收通道关闭",arguments);
+           };
+           channel.onmessage  = function(e)
+           {
+               console.log("接收通道信息",arguments);
+               message("收到:"+e.data);
+           };
+       };
     pc.onremovestream = handleRemoteStreamRemoved;
     console.log('Created RTCPeerConnnection');
   } catch (e) {

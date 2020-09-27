@@ -253,7 +253,11 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
 
                 @Override
                 public void onMessage(DataChannel.Buffer buffer) {
-                    Log.w("#####", "[onMessage]DataChannel,buffer =" + buffer.data);
+                    try {
+                        Log.w("#####", "[onMessage]DataChannel,buffer =" + new String(buffer.data.array()));
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             });
             channelHashMap.put(socketId, dataChannel);
@@ -354,9 +358,9 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
     void sendMessage(){
         String message = message_input.getEditableText().toString();
         ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes());
-        DataChannel.Buffer buffer = new DataChannel.Buffer(byteBuffer, false);
+        DataChannel.Buffer buffer = new DataChannel.Buffer(byteBuffer, true);
 
-        SignalingClient.get().sendMessage(message);
-//        dataChannel.send(buffer);
+//        SignalingClient.get().sendMessage(message);
+        dataChannel.send(buffer);
     }
 }
