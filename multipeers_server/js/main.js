@@ -135,6 +135,8 @@ function maybeStart() {
     if (isInitiator) {
       doCall();
     }
+  }else{
+    createPeerConnection()
   }
 }
 
