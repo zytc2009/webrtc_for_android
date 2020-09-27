@@ -5,6 +5,8 @@ var isInitiator = false;
 var isStarted = false;
 var localStream;
 var pc;
+var dc = null;
+
 var remoteStream;
 var turnReady;
 
@@ -51,6 +53,12 @@ socket.on('join', function (room){
 socket.on('joined', function(room) {
   console.log('joined: ' + room);
   isChannelReady = true;
+  
+  var dataChannelOptions = {
+  		  ordered: true, //保证到达顺序
+  };
+  //文本聊天
+  dc=pc.createDataChannel('dataChannel',dataChannelOptions);
 });
 
 socket.on('log', function(array) {
