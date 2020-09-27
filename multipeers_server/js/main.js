@@ -155,6 +155,7 @@ window.onbeforeunload = function() {
 /////////////////////////////////////////////////////////
 
 function createPeerConnection() {
+console.log('>>>>>>> createPeerConnection() ');
   try {
     pc = new RTCPeerConnection(null);
     pc.onicecandidate = handleIceCandidate;

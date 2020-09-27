@@ -57,6 +57,8 @@ io.sockets.on('connection', function (socket) {
             socket.join(room);
             socket.emit('joined', room, socket.id);//发送joined事件给socket.id指定的客户端，
             io.sockets.in(room).emit('ready');//向房间中所有的人发送ready事件消息
+
+
         }
     });
 
