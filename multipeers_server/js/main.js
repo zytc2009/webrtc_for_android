@@ -53,7 +53,7 @@ socket.on('join', function (room){
 socket.on('joined', function(room) {
   console.log('joined: ' + room);
   isChannelReady = true;
-  
+
   var dataChannelOptions = {
   		  ordered: true, //保证到达顺序
   };
@@ -159,7 +159,7 @@ function createPeerConnection() {
     pc = new RTCPeerConnection(null);
     pc.onicecandidate = handleIceCandidate;
     pc.onaddstream = handleRemoteStreamAdded;
-    pc.pc.ondatachannel=function(e)
+    pc.ondatachannel=function(e)
        {
            console.log("传输通道打开",arguments);
            channel =e.channel;
