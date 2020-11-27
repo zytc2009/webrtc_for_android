@@ -123,7 +123,7 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
             @Override
             public void onDataChannel(DataChannel dataChannel) {
                 super.onDataChannel(dataChannel);
-                ChatRoomActivity.this.dataChannel =dataChannel;
+//                ChatRoomActivity.this.dataChannel =dataChannel;
                 Log.w("#####", "[DataChannel] onDataChannel()" );
                 dataChannel.registerObserver(new DataChannel.Observer() {
                     @Override
@@ -138,7 +138,11 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
 
                     @Override
                     public void onMessage(DataChannel.Buffer buffer) {
-                        Log.w("#####", "[DataChannel] onMessage() buffer="+buffer );
+                        try {
+                            Log.w("#####", "[onMessage]DataChannel,buffer =" + new String(buffer.data.array()));
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
                     }
                 });
             }
@@ -213,7 +217,11 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
 
             @Override
             public void onMessage(DataChannel.Buffer buffer) {
-                Log.w("#####", "[onMessage]DataChannel,buffer =" + buffer.data);
+                try {
+                    Log.w("#####", "[onMessage]DataChannel,buffer =" + new String(buffer.data.array()));
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
         });
         channelHashMap.put(socketId, dataChannel);
@@ -237,6 +245,7 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
             PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
 
             DataChannel.Init init = new DataChannel.Init();
+            init.negotiated=true;
 
             Log.d("#########", "[DataChannel] onOfferReceived() socketId =" + socketId);
             dataChannel = peerConnection.createDataChannel("textchat", init);
