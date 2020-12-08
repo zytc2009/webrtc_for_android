@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         Logging.enableLogToDebugOutput(Logging.Severity.LS_VERBOSE);//打开webrtc的log输出
 
+        webRtcManager.startChat();
     }
 
     private void requestPermissions() {
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     @Override
     protected void onDestroy() {
+        webRtcManager.stopChat();
         super.onDestroy();
     }
 

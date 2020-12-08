@@ -119,7 +119,6 @@ public class WebRtcManager implements SignalingClient.Callback{
     }
 
     public void startChat(){
-
         SignalingClient.get().init(this);
     }
 
