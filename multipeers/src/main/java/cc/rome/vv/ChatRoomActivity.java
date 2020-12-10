@@ -232,7 +232,7 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
             @Override
             public void onMessage(DataChannel.Buffer buffer) {
                 try {
-                    byte[] data = new byte[buffer.data.limit()];
+                    byte[] data = new byte[buffer.data.limit()];//buffer.data.capacity()
                     buffer.data.get(data);
                     Log.w("#####", "[onMessage]DataChannel,buffer =" + new String(data));
                 }catch (Exception e){
