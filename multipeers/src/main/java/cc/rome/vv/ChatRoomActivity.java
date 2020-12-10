@@ -109,6 +109,7 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
 
 
         Logging.enableLogToDebugOutput(Logging.Severity.LS_VERBOSE);//打开webrtc的log输出
+
         SignalingClient.get().init(this);
     }
 
@@ -122,29 +123,6 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
         peerConnection = peerConnectionFactory.createPeerConnection(iceServers, new PeerConnectionAdapter("PC:" + socketId) {
             @Override
             public void onDataChannel(DataChannel dataChannel) {
-                super.onDataChannel(dataChannel);
-//                ChatRoomActivity.this.dataChannel =dataChannel;
-                Log.w("#####", "[DataChannel] onDataChannel()" );
-                dataChannel.registerObserver(new DataChannel.Observer() {
-                    @Override
-                    public void onBufferedAmountChange(long l) {
-
-                    }
-
-                    @Override
-                    public void onStateChange() {
-
-                    }
-
-                    @Override
-                    public void onMessage(DataChannel.Buffer buffer) {
-                        try {
-                            Log.w("#####", "[onMessage]DataChannel,buffer =" + new String(buffer.data.array()));
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                });
             }
 
             @Override
@@ -172,6 +150,7 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
             }
         });
 
+        initChannel(peerConnection, socketId);
 
         peerConnectionMap.put(socketId, peerConnection);
 //        channelHashMap.put(socketId, channel);
@@ -199,32 +178,7 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
         this.roomId = roomId;
         Log.d("#########", "[onPeerJoined],有新加入者，socketId=" + socketId);
         PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
-
-        DataChannel.Init init = new DataChannel.Init();
-
-        Log.d("#########", "[DataChannel] onPeerJoined() socketId =" + socketId);
-        dataChannel = peerConnection.createDataChannel("textchat", init);
-        dataChannel.registerObserver(new DataChannel.Observer() {
-            @Override
-            public void onBufferedAmountChange(long l) {
-
-            }
-
-            @Override
-            public void onStateChange() {
-
-            }
-
-            @Override
-            public void onMessage(DataChannel.Buffer buffer) {
-                try {
-                    Log.w("#####", "[onMessage]DataChannel,buffer =" + new String(buffer.data.array()));
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-        });
-        channelHashMap.put(socketId, dataChannel);
+//        initChannel(peerConnection, socketId);
 
         peerConnection.createOffer(new SdpAdapter("createOfferSdp:" + socketId) {
             @Override
@@ -234,56 +188,59 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
                 SignalingClient.get().sendSessionDescription(sessionDescription, socketId);
             }
         }, new MediaConstraints());
-
     }
 
     @Override
     public void onOfferReceived(JSONObject data) {
         Log.d("#########", "[onOfferReceived] data=" + data);
-        runOnUiThread(() -> {
-            final String socketId = data.optString("from");
-            PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
+        final String socketId = data.optString("from");
+        PeerConnection peerConnection = getOrCreatePeerConnection(socketId);
+//        initChannel(peerConnection, socketId);
 
-            DataChannel.Init init = new DataChannel.Init();
-            init.negotiated=true;
+        peerConnection.setRemoteDescription(new SdpAdapter("setRemoteSdp:" + socketId),
+                new SessionDescription(SessionDescription.Type.OFFER, data.optString("sdp")));
+        peerConnection.createAnswer(new SdpAdapter("localAnswerSdp") {
+            @Override
+            public void onCreateSuccess(SessionDescription sdp) {
+                super.onCreateSuccess(sdp);
+                peerConnectionMap.get(socketId).setLocalDescription(new SdpAdapter("setLocalSdp:" + socketId), sdp);
+                SignalingClient.get().sendSessionDescription(sdp, socketId);
+            }
+        }, new MediaConstraints());
+    }
 
-            Log.d("#########", "[DataChannel] onOfferReceived() socketId =" + socketId);
-            dataChannel = peerConnection.createDataChannel("textchat", init);
-            dataChannel.registerObserver(new DataChannel.Observer() {
-                @Override
-                public void onBufferedAmountChange(long l) {
+    private void initChannel(PeerConnection peerConnection, String socketId){
+        DataChannel.Init init = new DataChannel.Init();
+        init.ordered = true;
+        init.negotiated=true;
+        init.maxRetransmits=-1;
+        init.maxRetransmitTimeMs=-1;
+        init.id = 0;
+        Log.d("#########", "[DataChannel] initChannel() socketId =" + socketId);
+        dataChannel = peerConnection.createDataChannel("textchat", init);
+        dataChannel.registerObserver(new DataChannel.Observer() {
+            @Override
+            public void onBufferedAmountChange(long l) {
 
+            }
+
+            @Override
+            public void onStateChange() {
+                Log.d("#########", "[DataChannel] onStateChange() state =" + dataChannel.state());
+            }
+
+            @Override
+            public void onMessage(DataChannel.Buffer buffer) {
+                try {
+                    byte[] data = new byte[buffer.data.limit()];
+                    buffer.data.get(data);
+                    Log.w("#####", "[onMessage]DataChannel,buffer =" + new String(data));
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
-
-                @Override
-                public void onStateChange() {
-
-                }
-
-                @Override
-                public void onMessage(DataChannel.Buffer buffer) {
-                    try {
-                        Log.w("#####", "[onMessage]DataChannel,buffer =" + new String(buffer.data.array()));
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-                }
-            });
-            channelHashMap.put(socketId, dataChannel);
-
-            peerConnection.setRemoteDescription(new SdpAdapter("setRemoteSdp:" + socketId),
-                    new SessionDescription(SessionDescription.Type.OFFER, data.optString("sdp")));
-
-            peerConnection.createAnswer(new SdpAdapter("localAnswerSdp") {
-                @Override
-                public void onCreateSuccess(SessionDescription sdp) {
-                    super.onCreateSuccess(sdp);
-                    peerConnectionMap.get(socketId).setLocalDescription(new SdpAdapter("setLocalSdp:" + socketId), sdp);
-                    SignalingClient.get().sendSessionDescription(sdp, socketId);
-                }
-            }, new MediaConstraints());
-
+            }
         });
+        channelHashMap.put(socketId, dataChannel);
     }
 
     @Override
@@ -367,7 +324,7 @@ public class ChatRoomActivity extends AppCompatActivity implements SignalingClie
     void sendMessage(){
         String message = message_input.getEditableText().toString();
         ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes());
-        DataChannel.Buffer buffer = new DataChannel.Buffer(byteBuffer, true);
+        DataChannel.Buffer buffer = new DataChannel.Buffer(byteBuffer, false);
 
 //        SignalingClient.get().sendMessage(message);
         dataChannel.send(buffer);
